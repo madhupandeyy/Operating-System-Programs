@@ -1,5 +1,186 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+void sort(int pid[], int at[], int bt[], int n) {
+    int temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (at[j] < at[i]) {
+                // Swap arrival times
+                temp = at[i];
+                at[i] = at[j];
+                at[j] = temp;
+                // Swap burst times
+                temp = bt[i];
+                bt[i] = bt[j];
+                bt[j] = temp;
+                // Swap process IDs
+                temp = pid[i];
+                pid[i] = pid[j];
+                pid[j] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int n, tq;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    printf("Enter time quantum: ");
+    scanf("%d", &tq);
+
+    int pid[n], at[n], bt[n], st[n], ct[n], tat[n], wt[n], rt[n];
+    int burst_remaining[n];
+    int total_turnaround_time = 0, total_waiting_time = 0, total_response_time = 0, total_idle_time = 0;
+    int q[100], front = 0, rear = 0, current_time = 0, completed = 0;
+    int mark[n];
+
+    for (int i = 0; i < n; i++) {
+        printf("Enter arrival time of process %d: ", i + 1);
+        scanf("%d", &at[i]);
+        printf("Enter burst time of process %d: ", i + 1);
+        scanf("%d", &bt[i]);
+        burst_remaining[i] = bt[i];
+        pid[i] = i + 1;
+        mark[i] = 0;
+        printf("\n");
+    }
+
+    sort(pid, at, bt, n);
+
+    q[rear++] = 0; // start with the first process
+    mark[0] = 1;
+
+    while (completed != n) {
+        int idx = q[front++];
+
+        if (burst_remaining[idx] == bt[idx]) {
+            st[idx] = (current_time > at[idx]) ? current_time : at[idx];
+            total_idle_time += st[idx] - current_time;
+            current_time = st[idx];
+        }
+
+        if (burst_remaining[idx] - tq > 0) {
+            burst_remaining[idx] -= tq;
+            current_time += tq;
+        } else {
+            current_time += burst_remaining[idx];
+            burst_remaining[idx] = 0;
+            completed++;
+            ct[idx] = current_time;
+        }
+
+        for (int i = 1; i < n; i++) {
+            if (burst_remaining[i] > 0 && at[i] <= current_time && mark[i] == 0) {
+                q[rear++] = i;
+                mark[i] = 1;
+            }
+        }
+
+        if (burst_remaining[idx] > 0) {
+            q[rear++] = idx;
+        }
+
+        if (front == rear) {
+            for (int i = 1; i < n; i++) {
+                if (burst_remaining[i] > 0) {
+                    q[rear++] = i;
+                    mark[i] = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        tat[i] = ct[i] - at[i];
+        total_turnaround_time += tat[i];
+    }
+
+    for (int i = 0; i < n; i++) {
+        wt[i] = tat[i] - bt[i];
+        total_waiting_time += wt[i];
+    }
+
+    for (int i = 0; i < n; i++) {
+        rt[i] = st[i] - at[i];
+        total_response_time += rt[i];
+    }
+
+    float avg_turnaround_time = (float) total_turnaround_time / n;
+    float avg_waiting_time = (float) total_waiting_time / n;
+    float avg_response_time = (float) total_response_time / n;
+
+    printf("\n#P\tAT\tBT\tST\tCT\tTAT\tWT\tRT\n\n");
+
+    for (int i = 0; i < n; i++) {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", pid[i], at[i], bt[i], st[i], ct[i], tat[i], wt[i], rt[i]);
+    }
+    printf("Average Turnaround Time = %.2f\n", avg_turnaround_time);
+    printf("Average Waiting Time = %.2f\n", avg_waiting_time);
+    printf("Average Response Time = %.2f\n", avg_response_time);
+
+    return 0;
+}
+
+/*
+AT - Arrival Time of the process
+BT - Burst time of the process
+ST - Start time of the process
+CT - Completion time of the process
+TAT - Turnaround time of the process
+WT - Waiting time of the process
+RT - Response time of the process
+
+Formulas used:
+
+TAT = CT - AT
+WT = TAT - BT
+RT = ST - AT
+
+
+OUTPUT:
+
+
+Enter the number of processes: 5
+Enter time quantum: 2
+Enter arrival time of process 1: 0
+Enter burst time of process 1: 5
+
+Enter arrival time of process 2: 1
+Enter burst time of process 2: 3
+
+Enter arrival time of process 3: 2
+Enter burst time of process 3: 1
+
+Enter arrival time of process 4: 3
+Enter burst time of process 4: 2
+
+Enter arrival time of process 5: 4
+Enter burst time of process 5: 3
+
+
+#P	AT	BT	ST	CT	TAT	WT	RT
+
+1	0	5	0	13	13	8	0
+2	1	3	2	12	11	8	1
+3	2	1	4	5	3	2	2
+4	3	2	7	9	6	4	4
+5	4	3	9	14	10	7	5
+Average Turnaround Time = 8.60
+Average Waiting Time = 5.80
+Average Response Time = 2.40
+
+
+=== Code Execution Successful ===
+*/
+
+ON MORE CODE
+/*
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -173,4 +354,6 @@ Average Response Time = 2.40
 
 
 === Code Execution Successful ===
+*/
+
 */
