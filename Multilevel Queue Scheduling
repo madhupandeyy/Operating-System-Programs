@@ -97,14 +97,14 @@ void main() {
     simulateFCFS(sys_proc_id, sys_at, sys_bt, sys_count, 0);
 
     // Find the time when system processes finish
-    int system_end_time = 0;
-    if (sys_count > 0) {
-        system_end_time = sys_at[sys_count - 1] + sys_bt[sys_count - 1];
-        for (int i = 0; i < sys_count - 1; i++) {
-            if (sys_at[i + 1] > system_end_time) {
-                system_end_time = sys_at[i + 1];
+    int system_end_time = 0; // Initialize system_end_time to 0. This variable will hold the time at which the last system process finishes.
+    if (sys_count > 0) {    // Check if there are any system processes. If there are no system processes (sys_count == 0), there's no need to calculate system_end_time.
+        system_end_time = sys_at[sys_count - 1] + sys_bt[sys_count - 1];   // Set system_end_time to the sum of the arrival time and burst time of the last system process in the sorted list. This is a rough initial estimate, assuming that all previous processes have completed before the last one starts.
+        for (int i = 0; i < sys_count - 1; i++) {        // Loop over all system processes
+            if (sys_at[i + 1] > system_end_time) {        // Check if the arrival time of the next process is greater than the current system_end_time. 
+                system_end_time = sys_at[i + 1];          // If it is, update system_end_time to this process's arrival time. This handles any idle time (gaps) between processes.
             }
-            system_end_time += sys_bt[i];
+            system_end_time += sys_bt[i];   // Add the burst time of the current process to system_end_time. This updates the end time to include the time taken by the current process.
         }
     }
 
@@ -134,3 +134,4 @@ Average Waiting Time: 7.50 ms
 
 ...Program finished with exit code 0
 Press ENTER to exit console.
+
