@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define BUFFER_SIZE 5
+
+// Buffer
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
+
+// Semaphores
+int mutex = 1;
+int full = 0;
+int empty = BUFFER_SIZE;
+
+// Flag to indicate when to stop the loop
+int stop_loop = 0;
+
+// Wait operation
+void wait_sem(int *s) {
+    while (*s <= 0);
+    (*s)--;
+}
+
+// Signal operation
+void signal_sem(int *s) {
+    (*s)++;
+}
+
+// Producer function
+void produce(int item) {
+    // Place item in buffer
+    buffer[in] = item;
+    in = (in + 1) % BUFFER_SIZE;
+
+    printf("Produced item: %d\n", item);
+}
+
+// Consumer function
+int consume() {
+    // Consume item from buffer
+    int item = buffer[out];
+    out = (out + 1) % BUFFER_SIZE;
+
+    printf("Consumed item: %d\n", item);
+
+    return item;
+}
+
+int main() {
+    int num_producers, num_consumers;
+
+    // Get user input
+    printf("Enter the number of producer iterations: ");
+    scanf("%d", &num_producers);
+
+    printf("Enter the number of consumer iterations: ");
+    scanf("%d", &num_consumers);
+
+    // Loop until both producers and consumers have reached their limits
+    int producer_counter = 0, consumer_counter = 0;
+    while (!stop_loop) {
+        // Produce if not reached the limit
+        if (producer_counter < num_producers) {
+            // Wait if buffer is full
+            wait_sem(&empty);
+            wait_sem(&mutex);
+
+            // Produce item
+            int item = rand() % 100;
+            produce(item);
+
+            // Signal
+            signal_sem(&mutex);
+            signal_sem(&full);
+
+            producer_counter++;
+        }
+
+        // Consume if not reached the limit
+        if (consumer_counter < num_consumers) {
+            // Wait if buffer is empty
+            wait_sem(&full);
+            wait_sem(&mutex);
+
+            // Consume item
+            consume();
+
+            // Signal
+            signal_sem(&mutex);
+            signal_sem(&empty);
+
+            consumer_counter++;
+        }
+
+        // Check if both producer and consumer reached the limits
+        if (producer_counter >= num_producers && consumer_counter >= num_consumers) {
+            stop_loop = 1;
+        }
+    }
+
+    return 0;
+}
