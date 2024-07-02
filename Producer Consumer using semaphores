@@ -1,102 +1,51 @@
-#include <stdio.h>
-#include <stdlib.h>
 
-#define BUFFER_SIZE 5
-
-// Buffer
-int buffer[BUFFER_SIZE];
-int in = 0, out = 0;
-
-// Semaphores
-int mutex = 1;
-int full = 0;
-int empty = BUFFER_SIZE;
-
-// Flag to indicate when to stop the loop
-int stop_loop = 0;
-
-// Wait operation
-void wait_sem(int *s) {
-    while (*s <= 0);
-    (*s)--;
+#include<stdio.h>
+#include<stdlib.h>
+int mutex=1,full=0,empty=5,x=0;
+void wait()
+{
+    --mutex;
 }
-
-// Signal operation
-void signal_sem(int *s) {
-    (*s)++;
+void signal()
+{
+    ++mutex;
 }
-
-// Producer function
-void produce(int item) {
-    // Place item in buffer
-    buffer[in] = item;
-    in = (in + 1) % BUFFER_SIZE;
-
-    printf("Produced item: %d\n", item);
+void producer()
+{
+    wait();++full;--empty;x++;
+    printf("Producer has produced: Item %d\n",x);
+    signal();
 }
-
-// Consumer function
-int consume() {
-    // Consume item from buffer
-    int item = buffer[out];
-    out = (out + 1) % BUFFER_SIZE;
-
-    printf("Consumed item: %d\n", item);
-
-    return item;
+void consumer()
+{
+    wait();--full;++empty;
+    printf("Consumer has consumed: Item %d\n",x);
+    x--;signal();
 }
-
-int main() {
-    int num_producers, num_consumers;
-
-    // Get user input
-    printf("Enter the number of producer iterations: ");
-    scanf("%d", &num_producers);
-
-    printf("Enter the number of consumer iterations: ");
-    scanf("%d", &num_consumers);
-
-    // Loop until both producers and consumers have reached their limits
-    int producer_counter = 0, consumer_counter = 0;
-    while (!stop_loop) {
-        // Produce if not reached the limit
-        if (producer_counter < num_producers) {
-            // Wait if buffer is full
-            wait_sem(&empty);
-            wait_sem(&mutex);
-
-            // Produce item
-            int item = rand() % 100;
-            produce(item);
-
-            // Signal
-            signal_sem(&mutex);
-            signal_sem(&full);
-
-            producer_counter++;
-        }
-
-        // Consume if not reached the limit
-        if (consumer_counter < num_consumers) {
-            // Wait if buffer is empty
-            wait_sem(&full);
-            wait_sem(&mutex);
-
-            // Consume item
-            consume();
-
-            // Signal
-            signal_sem(&mutex);
-            signal_sem(&empty);
-
-            consumer_counter++;
-        }
-
-        // Check if both producer and consumer reached the limits
-        if (producer_counter >= num_producers && consumer_counter >= num_consumers) {
-            stop_loop = 1;
+void main()
+{
+    int ch;
+    printf("Enter 1.Producer 2.Consumer 3.Exit\n");
+    while(1)
+    {
+        printf("Enter your choice:\n");
+        scanf("%d",&ch);
+        switch(ch)
+        {
+            case 1:
+                if(mutex==1 && empty!=0)
+                producer();
+                else
+                    printf("Buffer is full!\n");
+                break;
+            case 2:
+                if(mutex==1 && full!=0)
+                consumer();
+                else
+                    printf("Buffer is empty!\n");
+                break;
+            case 3:exit(0);
+            default:printf("Invalid choice!\n");
         }
     }
-
-    return 0;
 }
